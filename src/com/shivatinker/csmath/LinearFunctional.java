@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 public class LinearFunctional implements IFunctional {
 
-    private Vector a;
+    private double[] a;
 
     public int getDimension() {
         return dimension;
@@ -14,30 +14,34 @@ public class LinearFunctional implements IFunctional {
     private final int dimension;
 
     public double get(int index) {
-        return a.get(index);
-    }
-
-    public double set(int index, double element) {
-        return a.set(index, element);
+        return a[index];
     }
 
     public LinearFunctional(int dimension) {
         this.dimension = dimension;
-        a = new Vector(dimension);
+        a = new double[dimension];
     }
 
-    public LinearFunctional(Vector a) {
+    public LinearFunctional(double[] a) {
         this.a = a;
-        dimension = a.size();
+        dimension = a.length;
     }
 
     @Override
-    public double evaluate(Vector x) {
-        if (x.size() != dimension)
+    public double evaluate(double[] x) {
+        if (x.length != dimension)
             throw new IllegalArgumentException("Wrong vector dimension");
         double res = 0.0;
         for (int i = 0; i < dimension; i++)
-            res += x.get(i) * a.get(i);
+            res += x[i] * a[i];
         return res;
+    }
+
+    @Override
+    public String toString() {
+        ArrayList<String> elems = new ArrayList<>();
+        for (int i = 0; i < a.length; i++)
+            elems.add(String.format("%.2f x%d", a[i], i));
+        return String.join(" + ", elems);
     }
 }

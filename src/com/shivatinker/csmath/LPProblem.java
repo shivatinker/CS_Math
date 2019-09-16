@@ -25,6 +25,11 @@ public class LPProblem {
     private final int m;
 
     private final boolean minimize;
+
+    public LinearFunctional getFunctional() {
+        return functional;
+    }
+
     private final LinearFunctional functional;
     private final BoundaryCondition[] conditions;
 
@@ -89,10 +94,10 @@ public class LPProblem {
         if (!minimize)
             return simplexOptimizeMax(maxIterations);
         else {
-            double[] flipped = new double[n];
-            for (int i = 0; i < n; i++)
+            double[] flipped = new double[functional.getDimension()];
+            for (int i = 0; i < functional.getDimension(); i++)
                 flipped[i] = -functional.get(i);
-            LinearFunctional lf = new LinearFunctional(new Vector(flipped));
+            LinearFunctional lf = new LinearFunctional(flipped);
             LPProblem problem = new LPProblem(lf, conditions, false);
             Result result = problem.simplexOptimizeMax(maxIterations);
             return new Result(result.solution, -result.value, result.infinitelyOptimizable);
@@ -164,7 +169,12 @@ public class LPProblem {
             if (current.v.get(i) < functional.getDimension())
                 resSolution[current.v.get(i)] = current.system.getC()[i];
 
-        return new Result(resSolution, functional.evaluate(new Vector(resSolution)), false);
+        return new Result(resSolution, functional.evaluate(resSolution), false);
+    }
+
+    @Override
+    public String toString() {
+        return (minimize ? "Minimize " : "Maximize ") + functional.toString();
     }
 
     public static class BoundaryCondition {

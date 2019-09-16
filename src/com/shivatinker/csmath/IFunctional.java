@@ -4,5 +4,5 @@ import java.util.ArrayList;
 
 public interface IFunctional {
 
-    double evaluate(Vector x);
+    double evaluate(double[] x);
 }
