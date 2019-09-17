@@ -4,9 +4,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.sound.sampled.Line;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class LPProblemTest {
     private ArrayList<LPProblem> problems;
@@ -27,31 +27,21 @@ public class LPProblemTest {
 
     @Test
     public void solve() throws LPProblem.LPException, LinearSystem.LSException {
-        ArrayList<LPProblem.BoundaryCondition> conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
+        ArrayList<LPProblem.BoundaryCondition> conditions = new ArrayList<>() {{
             add(new LPProblem.BoundaryCondition(new double[]{5, 1, 1, 0}, 4, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_EQUAL));
             add(new LPProblem.BoundaryCondition(new double[]{2, 1, 0, 1}, 3, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL));
             add(new LPProblem.BoundaryCondition(new double[]{1, 1, 0, 0}, 3, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
         }};
-        LinearFunctional functional = new LinearFunctional(new double[]{1, 1, 10000, 10000});
+        LinearFunctional functional = new LinearFunctional(new double[]{1, 1, 100, 100});
         LPProblem toSolve = new LPProblem(functional, conditions.toArray(new LPProblem.BoundaryCondition[0]), true);
-        LPProblem.Result result = toSolve.simplexOptimize();
+        LPProblem.Result result = toSolve.simplexOptimize(new HashSet<>(Arrays.asList(0, 1, 4)));
         System.out.println(String.format("X: %s Z = %.3f", Arrays.toString(result.solution), result.value));
-
-//        ArrayList<LPProblem.BoundaryCondition> conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
-//            add(new LPProblem.BoundaryCondition(new double[]{5, 1}, 12, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_EQUAL));
-//            add(new LPProblem.BoundaryCondition(new double[]{2, 1}, 11, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL));
-//            add(new LPProblem.BoundaryCondition(new double[]{1, 1}, 11, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
-//        }};
-//        LinearFunctional functional = new LinearFunctional(new double[]{1, 1});
-//        LPProblem toSolve = new LPProblem(functional, conditions.toArray(new LPProblem.BoundaryCondition[0]), true);
-//        LPProblem.Result result = toSolve.simplexOptimize();
-//        System.out.println(String.format("X: %s Z = %.3f", Arrays.toString(result.solution), result.value));
     }
 
     @Before
     public void setUp() {
-        problems = new ArrayList<LPProblem>() {{
-            ArrayList<LPProblem.BoundaryCondition> conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
+        problems = new ArrayList<>() {{
+            ArrayList<LPProblem.BoundaryCondition> conditions = new ArrayList<>() {{
                 add(new LPProblem.BoundaryCondition(new double[]{1, 2}, 6, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{2, 1}, 8, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{-1, 1}, 1, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
@@ -62,7 +52,7 @@ public class LPProblemTest {
             add(new LPProblem(functional, conditions.toArray(new LPProblem.BoundaryCondition[0]), false));
             solves.add(new double[]{3.5, 1});
 
-            conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
+            conditions = new ArrayList<>() {{
                 add(new LPProblem.BoundaryCondition(new double[]{1, 1}, 4, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{5, 2}, 10, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
             }};
@@ -72,7 +62,7 @@ public class LPProblemTest {
             add(new LPProblem(functional, conditions.toArray(new LPProblem.BoundaryCondition[0]), true));
             solves.add(new double[]{0, 0});
 
-            conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
+            conditions = new ArrayList<>() {{
                 add(new LPProblem.BoundaryCondition(new double[]{5, 1}, 7, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{2, 1}, 6, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{1, 1}, 6, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));
@@ -81,7 +71,7 @@ public class LPProblemTest {
             add(new LPProblem(functional, conditions.toArray(new LPProblem.BoundaryCondition[0]), true));
             solves.add(new double[]{1 / 3.0, 5 + 1 / 3.0});
 
-            conditions = new ArrayList<LPProblem.BoundaryCondition>() {{
+            conditions = new ArrayList<>() {{
                 add(new LPProblem.BoundaryCondition(new double[]{5, 1}, 3, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{2, 1}, 2, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL));
                 add(new LPProblem.BoundaryCondition(new double[]{1, 1}, 2, LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL));

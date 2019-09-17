@@ -1,9 +1,9 @@
 package com.shivatinker.csmath;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
-import static com.shivatinker.csmath.LPProblem.BoundaryConditionType.*;
+import static com.shivatinker.csmath.LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL;
+import static com.shivatinker.csmath.LPProblem.BoundaryConditionType.BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL;
 
 public class LPProblem {
 
@@ -89,39 +89,42 @@ public class LPProblem {
     }
 
     public Result simplexOptimize() throws LinearSystem.LSException, LPException {
-        return simplexOptimize(10000);
+        return simplexOptimize(10000, null);
     }
 
-    public Result simplexOptimize(int maxIterations) throws LinearSystem.LSException, LPException {
+    public Result simplexOptimize(Set<Integer> definedBasis) throws LinearSystem.LSException, LPException {
+        return simplexOptimize(10000, definedBasis);
+    }
+
+    public Result simplexOptimize(int maxIterations, Set<Integer> definedBasis) throws LinearSystem.LSException, LPException {
         if (!minimize)
-            return simplexOptimizeMax(maxIterations);
+            return simplexOptimizeMax(maxIterations, definedBasis);
         else {
             double[] flipped = new double[functional.getDimension()];
             for (int i = 0; i < functional.getDimension(); i++)
                 flipped[i] = -functional.get(i);
             LinearFunctional lf = new LinearFunctional(flipped);
             LPProblem problem = new LPProblem(lf, conditions, false);
-            Result result = problem.simplexOptimizeMax(maxIterations);
+            Result result = problem.simplexOptimizeMax(maxIterations, definedBasis);
             return new Result(result.solution, -result.value, result.infinitelyOptimizable);
         }
     }
 
-    private Result simplexOptimizeMax() throws LPException, LinearSystem.LSException {
-        return simplexOptimizeMax(10000);
-    }
-
-    private Result simplexOptimizeMax(int maxIterations) throws LPException, LinearSystem.LSException {
+    private Result simplexOptimizeMax(int maxIterations, Set<Integer> definedBasis) throws LPException, LinearSystem.LSException {
         System.out.println("Canonical form: ");
         System.out.println(canonicalForm);
-        List<Integer> all = new ArrayList<>();
-        for (int i = 0; i < n; i++)
-            all.add(i);
 
         List<Set<Integer>> basises = new ArrayList<>();
-        basises.add(new HashSet<>(new ArrayList<>(Arrays.asList(0, 1, 4))));
+        if (definedBasis == null) {
+            List<Integer> all = new ArrayList<>();
+            for (int i = 0; i < n; i++)
+                all.add(i);
 
-        basises = Utils.getSubsets(all, n - m);
+            basises.add(new HashSet<>(new ArrayList<>(Arrays.asList(0, 1, 4))));
 
+            basises = Utils.getSubsets(all, n - m);
+        } else
+            basises.add(definedBasis);
         LinearSystem.DiagonalizationResult current = null;
         Set<Integer> basis = null;
         for (Set<Integer> b : basises)
