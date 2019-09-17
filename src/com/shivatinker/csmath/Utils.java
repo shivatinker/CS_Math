@@ -9,7 +9,7 @@ class Utils {
     private Utils() {
     }
 
-    public static final double EQUALITY_EPS = 1e-8;
+    public static final double EQUALITY_EPS = 1e-10;
 
     public static boolean doubleEquals(double a, double b) {
         return Math.abs(a - b) < EQUALITY_EPS;

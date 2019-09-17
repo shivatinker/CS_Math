@@ -1,5 +1,6 @@
 package com.shivatinker.csmath;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static com.shivatinker.csmath.LPProblem.BoundaryConditionType.*;
@@ -77,8 +78,9 @@ public class LPProblem {
                     break;
                 case BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL:
                     System.arraycopy(condition.a, 0, a[i], 0, condition.a.length);
-                    a[i][xn + add] = 1.0;
+                    a[i][xn + add] = -1.0;
                     c[i] = condition.c;
+                    add++;
                     break;
             }
             i++;
@@ -109,17 +111,38 @@ public class LPProblem {
     }
 
     private Result simplexOptimizeMax(int maxIterations) throws LPException, LinearSystem.LSException {
-        Result result;
         System.out.println("Canonical form: ");
         System.out.println(canonicalForm);
-        List<Set<Integer>> basises = Collections.singletonList(new HashSet<>(Arrays.asList(0, 1)));// Utils.getSubsets(all, n - m);
+        List<Integer> all = new ArrayList<>();
+        for (int i = 0; i < n; i++)
+            all.add(i);
+
+        List<Set<Integer>> basises = new ArrayList<>();
+        basises.add(new HashSet<>(new ArrayList<>(Arrays.asList(0, 1, 4))));
+
+        basises = Utils.getSubsets(all, n - m);
+
         LinearSystem.DiagonalizationResult current = null;
         Set<Integer> basis = null;
         for (Set<Integer> b : basises)
             try {
-                current = canonicalForm.diagonalize(b);
-                basis = b;
-            } catch (LinearSystem.LSException ignored) {
+                LinearSystem.DiagonalizationResult result1 = canonicalForm.diagonalize(b);
+                System.out.printf("Chacking Basis: %s\n", b.toString());
+                System.out.println(result1.system);
+                boolean ok = true;
+                double[] c = result1.system.getC();
+                for (int i = 0; i < c.length; i++) {
+                    double z = c[i];
+                    Integer ii = result1.v.get(i);
+                    ok &= (ii == n - 1 || z >= -1e-10);
+                }
+                if (ok) {
+                    current = result1;
+                    basis = b;
+                    break;
+                }
+            } catch (LinearSystem.LSException e) {
+                System.err.println(e.toString());
             }
         if (current == null)
             throw new LPException("Cannot find initial basis");
@@ -141,6 +164,9 @@ public class LPProblem {
             double tmp1 = c[r0];
             c[r0] = c[0];
             c[0] = tmp1;
+            int tmp2 = rows[r0];
+            rows[r0] = rows[0];
+            rows[0] = tmp2;
             int col = 0;
             for (int i = 0; i < n - 1; i++)
                 if (a[0][i] < a[0][col])
@@ -149,7 +175,7 @@ public class LPProblem {
                 break;
             int row = 0;
             for (int i = 1; i < m; i++)
-                if (a[row][col] == 0 || (a[i][col] > 0 && (row == 0 || (c[i] / a[i][col] < c[row] / a[row][col]))))
+                if (a[row][col] == 0 || (a[i][col] > -1e-10 && (row == 0 || (c[i] / a[i][col] < c[row] / a[row][col]))))
                     row = i;
             if (row == 0)
                 return new Result(null, Double.MAX_VALUE, true);
@@ -174,7 +200,10 @@ public class LPProblem {
 
     @Override
     public String toString() {
-        return (minimize ? "Minimize " : "Maximize ") + functional.toString();
+        StringBuilder s = new StringBuilder((minimize ? "Minimize " : "Maximize ") + functional.toString() + "\n");
+        for (BoundaryCondition condition : conditions)
+            s.append(condition.toString()).append("\n");
+        return s.toString();
     }
 
     public static class BoundaryCondition {
@@ -186,6 +215,25 @@ public class LPProblem {
             this.a = a;
             this.c = c;
             this.type = type;
+        }
+
+        @Override
+        public String toString() {
+            ArrayList<String> vals = new ArrayList<>();
+            for (int i = 0; i < a.length; i++) vals.add(String.format("%5.2f x%d", a[i], i + 1));
+            String delim = " ";
+            switch (type) {
+                case BOUNDARY_CONDITION_TYPE_EQUAL:
+                    delim = " = ";
+                    break;
+                case BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL:
+                    delim = " <= ";
+                    break;
+                case BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL:
+                    delim = " >= ";
+                    break;
+            }
+            return String.join(" + ", vals) + delim + String.format("%5.2f", c);
         }
     }
 

@@ -9,11 +9,14 @@ public class LinearSystem {
     private final int m;
 
     public double[][] getA() {
-        return a;
+        double[][] res = new double[a.length][a[0].length];
+        for (int i = 0; i < a.length; i++)
+            System.arraycopy(a[i], 0, res[i], 0, a[0].length);
+        return res;
     }
 
     public double[] getC() {
-        return c;
+        return Arrays.copyOf(c, c.length);
     }
 
     private final double[][] a;
@@ -85,7 +88,7 @@ public class LinearSystem {
                 continue;
             int r = -1;
             for (int j = 0; j < m; j++)
-                if (a[j][i] != 0 && !done.contains(j)) {
+                if (!Utils.isZero(a[j][i]) && !done.contains(j)) {
                     r = j;
                     break;
                 }
@@ -98,7 +101,7 @@ public class LinearSystem {
                     system = system.addRow(r, j, -system.getA()[j][i]);
             done.add(r);
             res.v.put(r, i);
-            //System.out.println(system);
+//            System.out.println(system);
         }
         res.system = system;
         return res;
