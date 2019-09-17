@@ -77,8 +77,9 @@ public class LPProblem {
                     break;
                 case BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL:
                     System.arraycopy(condition.a, 0, a[i], 0, condition.a.length);
-                    a[i][xn + add] = 1.0;
+                    a[i][xn + add] = -1.0;
                     c[i] = condition.c;
+                    add++;
                     break;
             }
             i++;
@@ -109,16 +110,32 @@ public class LPProblem {
     }
 
     private Result simplexOptimizeMax(int maxIterations) throws LPException, LinearSystem.LSException {
-        Result result;
         System.out.println("Canonical form: ");
         System.out.println(canonicalForm);
-        List<Set<Integer>> basises = Collections.singletonList(new HashSet<>(Arrays.asList(0, 1)));// Utils.getSubsets(all, n - m);
+        List<Integer> all = new ArrayList<>();
+        for (int i = 0; i < n; i++)
+            all.add(i);
+        List<Set<Integer>> basises = Utils.getSubsets(all, n - m);
+
         LinearSystem.DiagonalizationResult current = null;
         Set<Integer> basis = null;
         for (Set<Integer> b : basises)
             try {
-                current = canonicalForm.diagonalize(b);
-                basis = b;
+                LinearSystem.DiagonalizationResult result1 = canonicalForm.diagonalize(b);
+                System.out.printf("Chacking Basis: %s\n", b.toString());
+                System.out.println(result1.system);
+                boolean ok = true;
+                double[] c = result1.system.getC();
+                for (int i = 0; i < c.length; i++) {
+                    double z = c[i];
+                    Integer ii = result1.v.get(i);
+                    ok &= (ii == n - 1 || z >= -1e-6);
+                }
+                if (ok) {
+                    current = result1;
+                    basis = b;
+                    break;
+                }
             } catch (LinearSystem.LSException ignored) {
             }
         if (current == null)
@@ -174,7 +191,10 @@ public class LPProblem {
 
     @Override
     public String toString() {
-        return (minimize ? "Minimize " : "Maximize ") + functional.toString();
+        StringBuilder s = new StringBuilder((minimize ? "Minimize " : "Maximize ") + functional.toString() + "\n");
+        for (BoundaryCondition condition : conditions)
+            s.append(condition.toString()).append("\n");
+        return s.toString();
     }
 
     public static class BoundaryCondition {
@@ -186,6 +206,25 @@ public class LPProblem {
             this.a = a;
             this.c = c;
             this.type = type;
+        }
+
+        @Override
+        public String toString() {
+            ArrayList<String> vals = new ArrayList<>();
+            for (int i = 0; i < a.length; i++) vals.add(String.format("%5.2f x%d", a[i], i + 1));
+            String delim = " ";
+            switch (type) {
+                case BOUNDARY_CONDITION_TYPE_EQUAL:
+                    delim = " = ";
+                    break;
+                case BOUNDARY_CONDITION_TYPE_LESS_OR_EQUAL:
+                    delim = " <= ";
+                    break;
+                case BOUNDARY_CONDITION_TYPE_GREAT_OR_EQUAL:
+                    delim = " >= ";
+                    break;
+            }
+            return String.join(" + ", vals) + delim + String.format("%5.2f", c);
         }
     }
 
